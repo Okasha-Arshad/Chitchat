@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'websocket_service.dart';
+import 'services/auth_services.dart';
 
 class ChatScreen extends StatefulWidget {
   final String userId;
@@ -61,11 +62,22 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _logout() {
+    AuthService authService = AuthService();
+    authService.signOutUser(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat App'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: Column(
         children: [

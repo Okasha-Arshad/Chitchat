@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:chittchat/chat_screen.dart';
-import 'package:chittchat/profile_screen.dart';
 import 'package:chittchat/providers/user_provider.dart';
 import 'package:chittchat/utils/constants.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chittchat/websocket_service.dart';
+import 'package:chittchat/home_screen.dart'; // Add this import
 
 class AuthService {
   Future<void> signUpUser({
@@ -103,9 +103,10 @@ class AuthService {
             // Assuming the response has user ID in this path
             final token = responseBody['token'];
 
-            //userProvider.setUser(res.body);
-
+            // Save login state
             await prefs.setString('x-auth-token', token);
+            await prefs.setString('userId', userId);
+            await prefs.setString('recipientId', my_receipent_id);
 
             navigator.pushAndRemoveUntil(
               MaterialPageRoute(
@@ -124,5 +125,28 @@ class AuthService {
     } catch (e) {
       showSnackBar(context, e.toString());
     }
+  }
+
+  Future<void> signOutUser(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('x-auth-token');
+    await prefs.remove('userId');
+    await prefs.remove('recipientId');
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+          builder: (context) => HomeScreen()), // Navigate to HomeScreen
+      (route) => false,
+    );
+  }
+
+  Future<Map<String, String>?> getLoginState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('x-auth-token');
+    String? userId = prefs.getString('userId');
+    String? recipientId = prefs.getString('recipientId');
+    if (token != null && userId != null && recipientId != null) {
+      return {'token': token, 'userId': userId, 'recipientId': recipientId};
+    }
+    return null;
   }
 }
