@@ -39,6 +39,7 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.2.3
   google_fonts: ^6.2.1
+  web_socket_channel: 
 
 dev_dependencies:
   flutter_test:

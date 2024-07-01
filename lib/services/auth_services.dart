@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:chittchat/chat_screen.dart';
 import 'package:chittchat/profile_screen.dart';
 import 'package:chittchat/providers/user_provider.dart';
 import 'package:chittchat/utils/constants.dart';
@@ -9,9 +9,10 @@ import 'package:chittchat/utils/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:chittchat/websocket_service.dart';
 
 class AuthService {
-  void signUpUser({
+  Future<void> signUpUser({
     required BuildContext context,
     required String email,
     required String password,
@@ -27,8 +28,6 @@ class AuthService {
       );
 
       print('Sending signup request with data: ${user.toJson()}');
-
-      print('${Constants.uri}/api/auth/signup');
 
       http.Response res = await http.post(
         Uri.parse('${Constants.uri}/api/auth/signup'),
@@ -55,7 +54,7 @@ class AuthService {
     }
   }
 
-  void signInUser({
+  Future<void> signInUser({
     required BuildContext context,
     required String email,
     required String password,
@@ -73,19 +72,53 @@ class AuthService {
           'Content-Type': 'application/json; charset=UTF-8',
         },
       );
+
+      print('Response: ${res.body}');
+
       httpErrorHandle(
         response: res,
         context: context,
         onSuccess: () async {
           SharedPreferences prefs = await SharedPreferences.getInstance();
-          userProvider.setUser(res.body);
-          await prefs.setString('x-auth-token', jsonDecode(res.body)['token']);
-          navigator.pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => MainPage(),
-            ),
-            (route) => false,
-          );
+
+          final responseBody = jsonDecode(res.body);
+          print('Response Body : ${responseBody['id']}');
+
+          if (responseBody != null) {
+            final userId = responseBody['id'].toString();
+
+            var my_receipent_id = '';
+            if (userId == '2') {
+              my_receipent_id = '18';
+            } else if (userId == '18') {
+              my_receipent_id = '2';
+            }
+
+            //init login message to websocket
+            var _xf_web_socket = WebSocketService();
+            _xf_web_socket.connect('ws://localhost:3000');
+
+            _xf_web_socket.sendMessage('', my_receipent_id, userId, 'login');
+
+            // Assuming the response has user ID in this path
+            final token = responseBody['token'];
+
+            //userProvider.setUser(res.body);
+
+            await prefs.setString('x-auth-token', token);
+
+            navigator.pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  userId: userId,
+                  recipientId: my_receipent_id, // Modify as needed
+                ),
+              ),
+              (route) => false,
+            );
+          } else {
+            showSnackBar(context, 'Invalid login response');
+          }
         },
       );
     } catch (e) {

@@ -17,8 +17,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
   final AuthService authService = AuthService();
 
-  void signupUser() {
-    authService.signUpUser(
+  Future<void> signupUser() async {
+    await authService.signUpUser(
       context: context,
       email: _emailController.text,
       password: _passwordController.text,
@@ -186,12 +186,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       onPressed: () {
                         if (_formKey.currentState?.validate() ?? false) {
                           signupUser();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoginPage(title: ''),
-                            ),
-                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => LoginPage(title: ''),
+                          //   ),
+                          // );
                         }
                       },
                     ),

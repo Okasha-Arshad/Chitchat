@@ -19,7 +19,7 @@ class User {
     return <String, dynamic>{
       'username': username,
       'email': email,
-      //'token': token,
+      'token': token,
       'password': password,
     };
   }

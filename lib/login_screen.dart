@@ -1,6 +1,6 @@
+import 'package:chittchat/chat_screen.dart';
 import 'package:chittchat/services/auth_services.dart';
 import 'package:flutter/material.dart';
-import 'package:chittchat/profile_screen.dart';
 import 'main.dart'; // Import the colors defined in main.dart
 import 'gradient_button.dart';
 
@@ -19,8 +19,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final AuthService authService = AuthService();
 
-  void loginUser() {
-    authService.signInUser(
+  Future<void> loginUser() async {
+    await authService.signInUser(
       context: context,
       email: _emailController.text,
       password: _passwordController.text,
@@ -136,15 +136,9 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         child: GradientButton(
                           text: 'Log in',
-                          onPressed: () {
+                          onPressed: () async {
                             if (_formKey.currentState?.validate() ?? false) {
-                              loginUser();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => MainPage(),
-                                ),
-                              );
+                              await loginUser();
                             }
                           },
                         ),
