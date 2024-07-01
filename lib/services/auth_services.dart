@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'package:chittchat/chat_screen.dart';
 import 'package:chittchat/providers/user_provider.dart';
+import 'package:chittchat/services/user_service.dart';
+import 'package:chittchat/user_list_screen.dart';
 import 'package:chittchat/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:chittchat/models/user.dart';
@@ -9,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chittchat/websocket_service.dart';
-import 'package:chittchat/home_screen.dart'; // Add this import
+import 'package:chittchat/home_screen.dart';
 
 class AuthService {
   Future<void> signUpUser({
@@ -82,7 +83,7 @@ class AuthService {
           SharedPreferences prefs = await SharedPreferences.getInstance();
 
           final responseBody = jsonDecode(res.body);
-          print('Response Body : ${responseBody['id']}');
+          print('Response Body : ${responseBody}');
 
           if (responseBody != null) {
             final userId = responseBody['id'].toString();
@@ -102,18 +103,27 @@ class AuthService {
 
             // Assuming the response has user ID in this path
             final token = responseBody['token'];
+            final username = responseBody['username'] ?? '';
+            final email = responseBody['email'] ?? '';
 
-            // Save login state
-            await prefs.setString('x-auth-token', token);
+            // Save user details
+            User currentUser = User(
+              id: userId,
+              username: username,
+              email: email,
+              token: token,
+              password: '',
+            );
+            await UserService().saveUserDetails(currentUser);
+
             await prefs.setString('userId', userId);
-            await prefs.setString('recipientId', my_receipent_id);
+            await prefs.setString('username', username);
+            await prefs.setString('email', email);
+            await prefs.setString('x-auth-token', token);
 
             navigator.pushAndRemoveUntil(
               MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                  userId: userId,
-                  recipientId: my_receipent_id, // Modify as needed
-                ),
+                builder: (context) => UserListScreen(),
               ),
               (route) => false,
             );
@@ -132,6 +142,8 @@ class AuthService {
     await prefs.remove('x-auth-token');
     await prefs.remove('userId');
     await prefs.remove('recipientId');
+    await prefs.remove('username');
+    await prefs.remove('email');
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
           builder: (context) => HomeScreen()), // Navigate to HomeScreen
@@ -143,9 +155,15 @@ class AuthService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('x-auth-token');
     String? userId = prefs.getString('userId');
-    String? recipientId = prefs.getString('recipientId');
-    if (token != null && userId != null && recipientId != null) {
-      return {'token': token, 'userId': userId, 'recipientId': recipientId};
+    String? username = prefs.getString('username');
+    String? email = prefs.getString('email');
+    if (token != null && userId != null) {
+      return {
+        'token': token,
+        'userId': userId,
+        'username': username ?? '',
+        'email': email ?? ''
+      };
     }
     return null;
   }

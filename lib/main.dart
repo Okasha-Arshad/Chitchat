@@ -1,11 +1,7 @@
-import 'package:chittchat/login_screen.dart';
 import 'package:chittchat/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'home_screen.dart';
 import 'providers/user_provider.dart';
-import 'chat_screen.dart';
-import 'services/auth_services.dart';
 
 // Define your custom colors
 const Color darkBlueColor = Color.fromARGB(255, 2, 7, 66); // Dark blue color

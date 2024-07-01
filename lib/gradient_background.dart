@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main.dart'; // Import kColorScheme for accessing colors
+// Import kColorScheme for accessing colors
 
 class GradientBackground extends StatelessWidget {
   final Widget child;

@@ -1,10 +1,9 @@
+import 'package:chittchat/user_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'gradient_background.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/auth_services.dart';
-import 'chat_screen.dart';
-import 'login_screen.dart';
 
 class SplashScreen extends StatelessWidget {
   @override
@@ -17,10 +16,7 @@ class SplashScreen extends StatelessWidget {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatScreen(
-              userId: loginState['userId']!,
-              recipientId: loginState['recipientId']!,
-            ),
+            builder: (context) => UserListScreen(),
           ),
         );
       } else {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:chittchat/services/auth_services.dart';
-import 'package:chittchat/login_screen.dart';
 import 'main.dart'; // Import the colors defined in main.dart
 import 'gradient_button.dart';
 

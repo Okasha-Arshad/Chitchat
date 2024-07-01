@@ -1,4 +1,3 @@
-import 'package:chittchat/chat_screen.dart';
 import 'package:chittchat/services/auth_services.dart';
 import 'package:flutter/material.dart';
 import 'main.dart'; // Import the colors defined in main.dart
