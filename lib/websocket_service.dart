@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -23,6 +22,18 @@ class WebSocketService {
     });
 
     print('Sending message: $message');
+    channel.sink.add(message);
+  }
+
+  void sendTypingStatus(String userId, String recipientId, bool isTyping) {
+    final message = jsonEncode({
+      'type': 'typing',
+      'userId': userId,
+      'recipientId': recipientId,
+      'isTyping': isTyping,
+    });
+
+    print('Sending typing status: $message');
     channel.sink.add(message);
   }
 

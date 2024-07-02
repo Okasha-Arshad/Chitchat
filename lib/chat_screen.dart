@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'websocket_service.dart';
@@ -20,14 +21,19 @@ class _ChatScreenState extends State<ChatScreen> {
   final WebSocketService _webSocketService = WebSocketService();
   final TextEditingController _controller = TextEditingController();
   List<Message> _messages = [];
+  bool _isTyping = false;
+  String _status = 'offline';
+  String _typingUserId = '';
+  String _recipientUsername = 'Loading...';
+  Timer? _typingTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchMessages();
+    _fetchRecipientDetails();
     _webSocketService.connect('ws://localhost:3000');
     _webSocketService.messages.listen((message) {
-      print('Message received: $message');
       final data = jsonDecode(message);
       if (data['type'] == 'message' &&
           (data['senderId'] == widget.recipientId ||
@@ -39,6 +45,18 @@ class _ChatScreenState extends State<ChatScreen> {
             content: data['text'],
             timestamp: DateTime.now(),
           ));
+          _isTyping = false; // Clear typing indicator when message is received
+        });
+      } else if (data['type'] == 'status' &&
+          data['userId'] == widget.recipientId) {
+        setState(() {
+          _status = data['status'];
+        });
+      } else if (data['type'] == 'typing' &&
+          data['userId'] == widget.recipientId) {
+        setState(() {
+          _typingUserId = data['userId'];
+          _isTyping = data['isTyping'];
         });
       }
     });
@@ -60,6 +78,21 @@ class _ChatScreenState extends State<ChatScreen> {
       });
     } else {
       print('Failed to load messages: ${response.statusCode}');
+    }
+  }
+
+  void _fetchRecipientDetails() async {
+    final response = await http.get(
+      Uri.parse('${Constants.uri}/api/auth/user/${widget.recipientId}'),
+    );
+
+    if (response.statusCode == 200) {
+      final userDetails = jsonDecode(response.body);
+      setState(() {
+        _recipientUsername = userDetails['username'];
+      });
+    } else {
+      print('Failed to load user details: ${response.statusCode}');
     }
   }
 
@@ -95,14 +128,22 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _logout() {
-    AuthService authService = AuthService();
-    authService.signOutUser(context);
+  void _handleTyping(String value) {
+    if (_typingTimer != null) {
+      _typingTimer!.cancel();
+    }
+    _webSocketService.sendTypingStatus(
+        widget.userId, widget.recipientId, value.isNotEmpty);
+    _typingTimer = Timer(Duration(seconds: 3), () {
+      _webSocketService.sendTypingStatus(
+          widget.userId, widget.recipientId, false);
+    });
   }
 
   @override
   void dispose() {
     _webSocketService.disconnect();
+    _typingTimer?.cancel();
     super.dispose();
   }
 
@@ -110,13 +151,30 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat App'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _recipientUsername,
+              style: TextStyle(color: Color.fromRGBO(0, 14, 8, 1)),
+            ),
+            Text(
+              _status,
+              style: TextStyle(
+                fontSize: 12,
+                color: Color.fromRGBO(121, 124, 123, 0.5),
+              ),
+            ),
+            if (_isTyping && _typingUserId == widget.recipientId)
+              Text(
+                'Typing...',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color.fromRGBO(121, 124, 123, 0.5),
+                ),
+              ),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -132,10 +190,24 @@ class _ChatScreenState extends State<ChatScreen> {
                         isMe ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
                       padding: EdgeInsets.all(8.0),
-                      color: isMe ? Colors.blue : Colors.grey,
+                      decoration: BoxDecoration(
+                        color: isMe
+                            ? Color.fromRGBO(61, 74, 122, 1)
+                            : Color.fromRGBO(242, 247, 251, 1),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: isMe ? Radius.zero : Radius.circular(12),
+                          bottomLeft: Radius.circular(12),
+                          bottomRight: isMe ? Radius.circular(12) : Radius.zero,
+                        ),
+                      ),
                       child: Text(
                         message.content,
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          color: isMe
+                              ? Color.fromRGBO(255, 255, 255, 1)
+                              : Color.fromRGBO(0, 14, 8, 1),
+                        ),
                       ),
                     ),
                   ),
@@ -151,6 +223,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(hintText: 'Enter a message'),
+                    onChanged: _handleTyping,
                   ),
                 ),
                 IconButton(
