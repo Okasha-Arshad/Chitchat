@@ -1,8 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'websocket_service.dart';
 import 'services/auth_services.dart';
+import 'package:http/http.dart' as http;
+import 'utils/constants.dart';
+import 'models/message.dart';
 
 class ChatScreen extends StatefulWidget {
   final String userId;
@@ -17,11 +19,12 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final WebSocketService _webSocketService = WebSocketService();
   final TextEditingController _controller = TextEditingController();
-  List<Map<String, String>> _messages = [];
+  List<Message> _messages = [];
 
   @override
   void initState() {
     super.initState();
+    _fetchMessages();
     _webSocketService.connect('ws://localhost:3000');
     _webSocketService.messages.listen((message) {
       print('Message received: $message');
@@ -30,10 +33,12 @@ class _ChatScreenState extends State<ChatScreen> {
           (data['senderId'] == widget.recipientId ||
               data['recipientId'] == widget.userId)) {
         setState(() {
-          _messages.add({
-            'senderId': data['senderId'],
-            'text': data['text'],
-          });
+          _messages.add(Message(
+            senderId: data['senderId'],
+            receiverId: widget.userId,
+            content: data['text'],
+            timestamp: DateTime.now(),
+          ));
         });
       }
     });
@@ -42,22 +47,50 @@ class _ChatScreenState extends State<ChatScreen> {
     _webSocketService.sendMessage('', widget.userId, widget.userId, 'login');
   }
 
-  @override
-  void dispose() {
-    _webSocketService.disconnect();
-    super.dispose();
+  void _fetchMessages() async {
+    final response = await http.get(
+      Uri.parse(
+          '${Constants.uri}/api/auth/messages?senderId=${widget.userId}&receiverId=${widget.recipientId}'),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> messagesJson = jsonDecode(response.body);
+      setState(() {
+        _messages = messagesJson.map((json) => Message.fromMap(json)).toList();
+      });
+    } else {
+      print('Failed to load messages: ${response.statusCode}');
+    }
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     if (_controller.text.isNotEmpty) {
       _webSocketService.sendMessage(
           _controller.text, widget.recipientId, widget.userId, 'message');
       setState(() {
-        _messages.add({
-          'senderId': widget.userId,
-          'text': _controller.text,
-        });
+        _messages.add(Message(
+          senderId: widget.userId,
+          receiverId: widget.recipientId,
+          content: _controller.text,
+          timestamp: DateTime.now(),
+        ));
       });
+
+      // Save message to backend
+      final response = await http.post(
+        Uri.parse('${Constants.uri}/api/auth/messages/send'),
+        body: jsonEncode({
+          'senderId': widget.userId,
+          'receiverId': widget.recipientId,
+          'content': _controller.text,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode != 201) {
+        print('Failed to send message: ${response.statusCode}');
+      }
+
       _controller.clear();
     }
   }
@@ -65,6 +98,12 @@ class _ChatScreenState extends State<ChatScreen> {
   void _logout() {
     AuthService authService = AuthService();
     authService.signOutUser(context);
+  }
+
+  @override
+  void dispose() {
+    _webSocketService.disconnect();
+    super.dispose();
   }
 
   @override
@@ -86,7 +125,7 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
-                final isMe = message['senderId'] == widget.userId;
+                final isMe = message.senderId == widget.userId;
                 return ListTile(
                   title: Align(
                     alignment:
@@ -95,7 +134,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       padding: EdgeInsets.all(8.0),
                       color: isMe ? Colors.blue : Colors.grey,
                       child: Text(
-                        message['text']!,
+                        message.content,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
