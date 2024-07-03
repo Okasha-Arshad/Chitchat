@@ -13,12 +13,14 @@ class WebSocketService {
   }
 
   void sendMessage(
-      String text, String recipientId, String userId, String? msgType) {
+      String text, String recipientId, String userId, String? msgType,
+      {String? imageUrl}) {
     final message = jsonEncode({
       'type': msgType,
       'recipientId': recipientId,
       'text': text,
-      'userId': userId
+      'userId': userId,
+      'imageUrl': imageUrl,
     });
 
     print('Sending message: $message');

@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../services/websocket_service.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import '../services/websocket_service.dart';
 import '../utils/constants.dart';
 import '../models/message.dart';
 
@@ -41,7 +42,8 @@ class _ChatScreenState extends State<ChatScreen> {
           _messages.add(Message(
             senderId: data['senderId'],
             receiverId: widget.userId,
-            content: data['text'],
+            content: data['text'] ?? '',
+            imageUrl: data['imageUrl'],
             timestamp: DateTime.now(),
           ));
           _isTyping = false; // Clear typing indicator when message is received
@@ -95,35 +97,67 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _sendMessage() async {
-    if (_controller.text.isNotEmpty) {
+  void _sendMessage({String? text, String? imageUrl}) async {
+    if ((text?.isNotEmpty ?? false) || imageUrl != null) {
       _webSocketService.sendMessage(
-          _controller.text, widget.recipientId, widget.userId, 'message');
+        text ?? '',
+        widget.recipientId,
+        widget.userId,
+        'message',
+        imageUrl: imageUrl,
+      );
       setState(() {
         _messages.add(Message(
           senderId: widget.userId,
           receiverId: widget.recipientId,
-          content: _controller.text,
+          content: text ?? '',
+          imageUrl: imageUrl,
           timestamp: DateTime.now(),
         ));
       });
 
       // Save message to backend
       final response = await http.post(
-        Uri.parse('${Constants.uri}/api/auth/messages/send'),
+        Uri.parse('${Constants.uri}/api/auth/send-message'),
         body: jsonEncode({
           'senderId': widget.userId,
           'receiverId': widget.recipientId,
-          'content': _controller.text,
+          'content': text,
+          'imageUrl': imageUrl,
         }),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode != 201) {
-        print('Failed to send message: ${response.statusCode}');
+        print(
+            'Failed to send message: ${response.statusCode}, ${response.body}');
       }
 
       _controller.clear();
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${Constants.uri}/api/auth/upload'),
+      );
+      request.files
+          .add(await http.MultipartFile.fromPath('image', pickedFile.path));
+
+      final response = await request.send();
+
+      if (response.statusCode == 201) {
+        final responseBody = await response.stream.bytesToString();
+        final imageUrl = jsonDecode(responseBody)['imageUrl'];
+        _sendMessage(imageUrl: imageUrl);
+      } else {
+        print('Failed to upload image: ${response.statusCode}');
+      }
     }
   }
 
@@ -215,13 +249,28 @@ class _ChatScreenState extends State<ChatScreen> {
                           bottomRight: isMe ? Radius.circular(12) : Radius.zero,
                         ),
                       ),
-                      child: Text(
-                        message.content,
-                        style: TextStyle(
-                          color: isMe
-                              ? Color.fromRGBO(255, 255, 255, 1)
-                              : Color.fromRGBO(0, 14, 8, 1),
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (message.content.isNotEmpty)
+                            Text(
+                              message.content,
+                              style: TextStyle(
+                                color: isMe
+                                    ? Color.fromRGBO(255, 255, 255, 1)
+                                    : Color.fromRGBO(0, 14, 8, 1),
+                              ),
+                            ),
+                          if (message.imageUrl != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Image.network(
+                                message.imageUrl!,
+                                height: 150,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -246,6 +295,11 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               child: Row(
                 children: [
+                  IconButton(
+                    icon: Icon(Icons.photo,
+                        color: Color.fromRGBO(61, 74, 122, 1)),
+                    onPressed: _pickImage,
+                  ),
                   Expanded(
                     child: TextField(
                       controller: _controller,
@@ -261,7 +315,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   IconButton(
                     icon:
                         Icon(Icons.send, color: Color.fromRGBO(61, 74, 122, 1)),
-                    onPressed: _sendMessage,
+                    onPressed: () => _sendMessage(text: _controller.text),
                   ),
                 ],
               ),
