@@ -1,36 +1,35 @@
-import 'package:flutter/material.dart';
 import 'package:chittchat/services/auth_services.dart';
-import 'main.dart'; // Import the colors defined in main.dart
-import 'gradient_button.dart';
+import 'package:flutter/material.dart';
+import '../main.dart'; // Import the colors defined in main.dart
+import '../widgets/gradient_button.dart';
 
-class SignUpScreen extends StatefulWidget {
+class LoginPage extends StatefulWidget {
+  const LoginPage({Key? key, required this.title}) : super(key: key);
+
+  final String title;
+
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   final AuthService authService = AuthService();
 
-  Future<void> signupUser() async {
-    await authService.signUpUser(
+  Future<void> loginUser() async {
+    await authService.signInUser(
       context: context,
       email: _emailController.text,
       password: _passwordController.text,
-      username: _nameController.text,
     );
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -59,7 +58,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Text(
-                      'Sign up with Email',
+                      'Log in to Chatbox',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -69,35 +68,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 16),
                     const Text(
                       textAlign: TextAlign.center,
-                      'Get chatting with friends and family today by signing up for our chat app!',
+                      'Welcome back! Sign in using your social account or email to continue.',
                       style: TextStyle(
                         fontSize: 16,
                         color: greyColor,
                       ),
                     ),
                     const SizedBox(height: 32),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Your name',
-                        labelStyle: TextStyle(color: darkBlueColor),
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 20.0, horizontal: 0),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: greyColor),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: greyColor),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
@@ -148,52 +125,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Confirm Password',
-                        labelStyle: TextStyle(color: darkBlueColor),
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 20.0, horizontal: 0),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: greyColor),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: greyColor),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please confirm your password';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'Passwords do not match';
-                        }
-                        return null;
-                      },
-                    ),
                   ],
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0),
-                  child: Container(
-                    width: double.infinity,
-                    child: GradientButton(
-                      text: 'Create an account',
-                      onPressed: () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          signupUser();
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => LoginPage(title: ''),
-                          //   ),
-                          // );
-                        }
-                      },
-                    ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        child: GradientButton(
+                          text: 'Log in',
+                          onPressed: () async {
+                            if (_formKey.currentState?.validate() ?? false) {
+                              await loginUser();
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () {
+                          // Handle forgot password
+                        },
+                        child: const Text('Forgot password?'),
+                      ),
+                    ],
                   ),
                 ),
               ],

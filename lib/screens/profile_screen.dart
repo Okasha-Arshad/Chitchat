@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'services/auth_services.dart';
-import 'models/user.dart';
+import '../services/auth_services.dart';
+import '../models/user.dart';
+import 'create_group_screen.dart';
+import 'group_list_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -31,6 +33,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _logout() async {
     AuthService authService = AuthService();
     await authService.signOutUser(context);
+  }
+
+  void _navigateToCreateGroup(BuildContext context, String userId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateGroupScreen(userId: userId),
+      ),
+    );
+  }
+
+  void _navigateToGroupList(BuildContext context, String userId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupListScreen(userId: userId),
+      ),
+    );
   }
 
   @override
@@ -70,7 +90,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Email: ${user.email}',
                     style: TextStyle(fontSize: 18),
                   ),
-                  // Add more fields if needed
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _navigateToCreateGroup(context, user.id),
+                    child: Text('Create Group'),
+                  ),
+                  SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () => _navigateToGroupList(context, user.id),
+                    child: Text('View Groups'),
+                  ),
                 ],
               ),
             );

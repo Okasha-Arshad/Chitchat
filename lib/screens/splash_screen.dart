@@ -1,9 +1,9 @@
-import 'package:chittchat/user_list_screen.dart';
+import 'package:chittchat/screens/user_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'gradient_background.dart';
+import '../widgets/gradient_background.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'services/auth_services.dart';
+import '../services/auth_services.dart';
 
 class SplashScreen extends StatelessWidget {
   @override

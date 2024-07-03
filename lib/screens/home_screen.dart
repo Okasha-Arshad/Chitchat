@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:chittchat/login_screen.dart';
-import 'package:chittchat/signup_screen.dart';
-import 'gradient_background.dart';
+import 'package:chittchat/screens/login_screen.dart';
+import 'package:chittchat/screens/signup_screen.dart';
+import '../widgets/gradient_background.dart';
 
 class HomeScreen extends StatelessWidget {
   @override

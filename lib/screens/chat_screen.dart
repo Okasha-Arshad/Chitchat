@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'websocket_service.dart';
-import 'services/auth_services.dart';
+import '../services/websocket_service.dart';
 import 'package:http/http.dart' as http;
-import 'utils/constants.dart';
-import 'models/message.dart';
+import '../utils/constants.dart';
+import '../models/message.dart';
 
 class ChatScreen extends StatefulWidget {
   final String userId;
@@ -151,28 +150,43 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        leading: IconButton(
+          icon: Image.asset('assets/images/back.png'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        title: Row(
           children: [
-            Text(
-              _recipientUsername,
-              style: TextStyle(color: Color.fromRGBO(0, 14, 8, 1)),
+            CircleAvatar(
+              backgroundImage: AssetImage('assets/images/profile_pic.png'),
+              radius: 20,
             ),
-            Text(
-              _status,
-              style: TextStyle(
-                fontSize: 12,
-                color: Color.fromRGBO(121, 124, 123, 0.5),
-              ),
-            ),
-            if (_isTyping && _typingUserId == widget.recipientId)
-              Text(
-                'Typing...',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color.fromRGBO(121, 124, 123, 0.5),
+            SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _recipientUsername,
+                  style: TextStyle(color: Color.fromRGBO(0, 14, 8, 1)),
                 ),
-              ),
+                Text(
+                  _status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color.fromRGBO(121, 124, 123, 0.5),
+                  ),
+                ),
+                if (_isTyping && _typingUserId == widget.recipientId)
+                  Text(
+                    'Typing...',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color.fromRGBO(121, 124, 123, 0.5),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -217,20 +231,40 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(hintText: 'Enter a message'),
-                    onChanged: _handleTyping,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 2,
+                    blurRadius: 5,
+                    offset: Offset(0, 3),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        hintText: 'Enter a message',
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 20.0),
+                      ),
+                      onChanged: _handleTyping,
+                    ),
+                  ),
+                  IconButton(
+                    icon:
+                        Icon(Icons.send, color: Color.fromRGBO(61, 74, 122, 1)),
+                    onPressed: _sendMessage,
+                  ),
+                ],
+              ),
             ),
           ),
         ],

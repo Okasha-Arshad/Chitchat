@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:chittchat/providers/user_provider.dart';
 import 'package:chittchat/services/user_service.dart';
-import 'package:chittchat/user_list_screen.dart';
+import 'package:chittchat/screens/user_list_screen.dart';
 import 'package:chittchat/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:chittchat/models/user.dart';
@@ -9,8 +9,8 @@ import 'package:chittchat/utils/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:chittchat/websocket_service.dart';
-import 'package:chittchat/home_screen.dart';
+import 'package:chittchat/services/websocket_service.dart';
+import 'package:chittchat/screens/home_screen.dart';
 
 class AuthService {
   Future<void> signUpUser({

@@ -6,10 +6,10 @@ import 'contacts_screen.dart';
 import 'settings_screen.dart';
 import 'chat_screen.dart';
 import 'profile_screen.dart';
-import 'services/user_service.dart';
-import 'models/user.dart';
-import 'main.dart'; // Import the colors defined in main.dart
-import 'gradient_background.dart'; // Assuming this file contains your gradient background
+import '../services/user_service.dart';
+import '../models/user.dart';
+import '../main.dart'; // Import the colors defined in main.dart
+import '../widgets/gradient_background.dart'; // Assuming this file contains your gradient background
 
 class UserListScreen extends StatefulWidget {
   @override
@@ -278,7 +278,7 @@ class _UserListScreenState extends State<UserListScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 30),
+                  SizedBox(height: 40),
                   _buildUserAvatars(), // Added user avatars row
                 ],
               ),

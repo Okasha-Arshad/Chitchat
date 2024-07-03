@@ -25,6 +25,18 @@ class WebSocketService {
     channel.sink.add(message);
   }
 
+  void sendGroupMessage(String text, String groupId, String userId) {
+    final message = jsonEncode({
+      'type': 'groupMessage',
+      'groupId': groupId,
+      'text': text,
+      'userId': userId
+    });
+
+    print('Sending group message: $message');
+    channel.sink.add(message);
+  }
+
   void sendTypingStatus(String userId, String recipientId, bool isTyping) {
     final message = jsonEncode({
       'type': 'typing',
@@ -34,6 +46,18 @@ class WebSocketService {
     });
 
     print('Sending typing status: $message');
+    channel.sink.add(message);
+  }
+
+  void sendGroupTypingStatus(String userId, String groupId, bool isTyping) {
+    final message = jsonEncode({
+      'type': 'groupTyping',
+      'userId': userId,
+      'groupId': groupId,
+      'isTyping': isTyping,
+    });
+
+    print('Sending group typing status: $message');
     channel.sink.add(message);
   }
 
